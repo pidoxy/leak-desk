@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Leak Desk</title>
+<meta name="description" content="Try a multimodal system that must say when its sources disagree.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* Concept: a control-room console. Dark teal ground like the SysConf deck, three source cards
+   in a row, big hand-count buttons, and one honest chart at the end. Dark-first; light mirrors it. */
+:root{
+  --bg:#062a30; --surface:#0c353b; --surface-2:#10424a; --line:#1f5a64;
+  --ink:#eef8f1; --muted:#9dc3b1; --accent:#4fc65e; --on-accent:#032a10;
+  --p-forced:#d0761f; --p-unprompted:#3f92cc; --p-cross:#36ad4a;
+  --good:#5ad06a; --bad:#ff8a6b; --focus:#f2d15b;
+  --f-display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --f-body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --scale:1; color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f3f3f3; --surface:#ffffff; --surface-2:#e4f5e9; --line:#c3d6cb;
+    --ink:#062a30; --muted:#48685f; --accent:#007a33; --on-accent:#ffffff;
+    --p-forced:#b85c00; --p-unprompted:#1f6fb0; --p-cross:#0b7a33;
+    --good:#0b7a33; --bad:#b4321a; --focus:#8a5a00; color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f3f3f3; --surface:#ffffff; --surface-2:#e4f5e9; --line:#c3d6cb;
+  --ink:#062a30; --muted:#48685f; --accent:#007a33; --on-accent:#ffffff;
+  --p-forced:#b85c00; --p-unprompted:#1f6fb0; --p-cross:#0b7a33;
+  --good:#0b7a33; --bad:#b4321a; --focus:#8a5a00; color-scheme:light;
+}
+*{box-sizing:border-box}
+html{font-size:calc(16px * var(--scale))}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.45;
+  padding-inline:max(16px,3vw);padding-block:18px 48px}
+body.proj{--scale:1.35}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-0.01em}
+h1{font-size:1.9rem;line-height:1.05}
+h2{font-size:1.25rem}
+h3{font-size:1rem}
+button,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1180px;margin-inline:auto;display:grid;gap:18px}
+header.top{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end;justify-content:space-between}
+.brand p{margin:.25rem 0 0;color:var(--muted)}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tools label{color:var(--muted);font-size:.85rem;display:flex;gap:6px;align-items:center}
+select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.pill{font-family:var(--f-mono);font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted);background:var(--surface)}
+.pill[data-state="on"]{color:var(--good);border-color:var(--good)}
+.pill[data-state="off"]{color:var(--bad);border-color:var(--bad)}
+.btn{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-weight:600}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+nav.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+nav.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 16px;font-family:var(--f-display);font-weight:700;font-size:1.05rem;color:var(--muted)}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.panel[hidden]{display:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-width:2.6rem;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-family:var(--f-mono);position:relative}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:600}
+.chip .live{position:absolute;top:3px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--focus)}
+.hint{color:var(--muted);font-size:.9rem}
+.sources{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.card .k{font-family:var(--f-mono);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.card .v{font-family:var(--f-display);font-size:1.3rem;line-height:1.2;margin-top:6px;overflow-wrap:anywhere}
+.hands{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.hand{display:grid;gap:6px;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:14px;text-align:left}
+.hand .name{font-family:var(--f-display);font-weight:700;font-size:1.15rem}
+.hand .n{font-family:var(--f-display);font-size:2.6rem;line-height:1;font-variant-numeric:tabular-nums}
+.hand .sub{color:var(--muted);font-size:.85rem}
+.hand[data-gold="true"]{border-color:var(--good)}
+.hand .minus{justify-self:start;font-size:.8rem;padding:2px 8px;border-radius:8px;border:1px solid var(--line);background:none;color:var(--muted)}
+.gold{border:1px solid var(--good);border-radius:14px;padding:14px 16px;background:var(--surface-2)}
+.gold b{font-family:var(--f-display)}
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.res{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:8px;min-width:0}
+.res header{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.res .pname{font-family:var(--f-display);font-weight:700;display:flex;gap:8px;align-items:center}
+.dot{width:12px;height:12px;border-radius:3px;flex:none}
+.dot.forced{background:var(--p-forced)} .dot.unprompted{background:var(--p-unprompted)} .dot.cross{background:var(--p-cross)}
+.label{font-family:var(--f-mono);font-weight:500;border:1px solid var(--ink);border-radius:8px;padding:2px 8px;font-size:.85rem;display:inline-block}
+.ok{color:var(--good);font-weight:600} .no{color:var(--bad);font-weight:600}
+.cited{display:flex;gap:6px;flex-wrap:wrap}
+.cited span{font-family:var(--f-mono);font-size:.75rem;border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--muted)}
+.reason{font-size:.95rem;overflow-wrap:anywhere}
+.mono{font-family:var(--f-mono);font-size:.82rem;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+textarea{width:100%;min-height:74px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;resize:vertical}
+.field{display:grid;gap:4px}
+.field span{font-family:var(--f-mono);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-family:var(--f-mono);font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500}
+.scroll{overflow-x:auto}
+tr.pivot td{background:var(--surface-2)}
+.score{display:flex;gap:10px;flex-wrap:wrap}
+.score button{display:flex;gap:10px;align-items:center;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface)}
+.score b{font-family:var(--f-display);font-size:1.5rem;font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.9rem}
+.legend span{display:flex;gap:6px;align-items:center}
+svg text{fill:var(--ink);font-family:var(--f-body)}
+svg .m{fill:var(--muted)}
+details{border:1px solid var(--line);border-radius:12px;padding:8px 14px;background:var(--surface)}
+summary{cursor:pointer;font-weight:600}
+.banner{border:1px solid var(--bad);border-radius:12px;padding:10px 14px;color:var(--bad)}
+footer.note{color:var(--muted);font-size:.85rem;max-width:80ch}
+@media (prefers-reduced-motion: reduce){.bar i{transition:none}}
+</style>
+<style>html,body{margin:0}body{background:var(--bg);color:var(--ink)}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Leak Desk</h1>
+      <p>Three sources, three allowed answers: ANSWER, CONFLICT, NEED MORE.</p>
+    </div>
+    <div class="tools">
+      <span id="conn" class="pill" data-state="idle">checking Claude…</span>
+      <label>Model
+        <select id="tier"><option value="quick">quick</option><option value="default">default</option><option value="complex">complex</option></select>
+      </label>
+      <button class="btn" id="proj" aria-pressed="false">Projector size</button>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="t-play" aria-selected="true" aria-controls="p-play">Play</button>
+    <button role="tab" id="t-break" aria-selected="false" aria-controls="p-break">Break it</button>
+    <button role="tab" id="t-bench" aria-selected="false" aria-controls="p-bench">Benchmark</button>
+  </nav>
+
+  <section class="panel" id="p-play" role="tabpanel" aria-labelledby="t-play">
+    <div class="wrap" style="max-width:none">
+      <div>
+        <div class="chips" id="caseChips" role="group" aria-label="Choose a case"></div>
+        <p class="hint" style="margin:.5rem 0 0">Dot marks the three cases for the talk (1, 3, 5). Cases 2, 4, 6 to 12 are held for the benchmark.</p>
+      </div>
+      <div class="sources" id="sources"></div>
+      <div>
+        <h2 style="margin-bottom:8px">What does the room say?</h2>
+        <div class="hands" id="hands"></div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary" id="reveal">Reveal answer</button>
+          <button class="btn" id="askPolicies">Ask the three policies</button>
+          <button class="btn" id="resetTally">Clear hand count</button>
+        </div>
+      </div>
+      <div id="goldBox" hidden></div>
+      <div class="results" id="playResults"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-break" role="tabpanel" aria-labelledby="t-break" hidden>
+    <div class="wrap" style="max-width:none">
+      <p class="hint" style="margin:0">Someone in the room writes evidence meant to fool the system. Type it in, run the policies, then see which source the CrossCheck decision depends on.</p>
+      <div class="grid2">
+        <div class="wrap" style="gap:10px">
+          <label class="field"><span>Start from case</span>
+            <select id="bkCase"></select></label>
+          <label class="field"><span>Pressure gauge</span><textarea id="bk-gauge" maxlength="280"></textarea></label>
+          <label class="field"><span>Field report</span><textarea id="bk-field" maxlength="280"></textarea></label>
+          <label class="field"><span>Camera feed</span><textarea id="bk-camera" maxlength="280"></textarea></label>
+          <div class="row">
+            <button class="btn primary" id="bkRun">Run all three policies</button>
+            <button class="btn" id="bkLoo">Leave one source out</button>
+          </div>
+          <p class="hint" id="bkOffline" hidden>Custom cases need a live model call, so this tab is off on the recorded version. Pick "Start from case" to read the sources, or use the Play tab to see recorded answers.</p>
+        </div>
+        <div class="wrap" style="gap:12px">
+          <div>
+            <h3>Round score</h3>
+            <p class="hint" style="margin:.2rem 0 8px">Tap when the room agrees a policy gave a wrong or unsafe answer.</p>
+            <div class="score" id="score"></div>
+          </div>
+          <div class="results" id="bkResults" style="grid-template-columns:1fr"></div>
+        </div>
+      </div>
+      <div id="looBox" hidden>
+        <h2 style="margin-bottom:8px">Leave one source out (CrossCheck)</h2>
+        <div class="scroll"><table id="looTable"></table></div>
+        <p class="hint" id="looNote"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-bench" role="tabpanel" aria-labelledby="t-bench" hidden>
+    <div class="wrap" style="max-width:none">
+      <div class="row">
+        <button class="btn primary" id="benchRun">Run benchmark (12 cases × 3 policies)</button>
+        <button class="btn" id="benchStop" disabled>Stop</button>
+        <button class="btn" id="benchReplay">Show saved run</button>
+        <button class="btn" id="benchExport">Save results as JSON</button>
+      </div>
+      <div class="bar" aria-hidden="true"><i id="benchBar"></i></div>
+      <p class="hint" id="benchStatus" style="margin:0">Not run yet. Run it before the talk; the result is kept in this browser so you can show it offline.</p>
+      <div id="benchOut"></div>
+    </div>
+  </section>
+
+  <footer class="note">
+    Twelve hand-written cases, four per evidence state. It shows how the policies behave; it is a demonstration, not a published benchmark.
+    Gold labels follow one rule: any disagreement between sources that report something definite is a CONFLICT. Answers come from Claude. On this page they are a recorded run: the tier, date and run note are shown above the table.
+  </footer>
+</div>
+
+<script src="core.js"></script>
+
+<script id="ui">
+(function(){
+var $=function(id){return document.getElementById(id)};
+function h(tag,attrs){
+  var el=document.createElement(tag);
+  if(attrs) Object.keys(attrs).forEach(function(k){
+    if(k==='class') el.className=attrs[k]; else if(k==='text') el.textContent=attrs[k];
+    else if(k.slice(0,2)==='on') el.addEventListener(k.slice(2),attrs[k]); else el.setAttribute(k,attrs[k]);
+  });
+  (function add(list){list.forEach(function(c){
+    if(c==null) return; if(Array.isArray(c)) return add(c);
+    el.append(c.nodeType?c:document.createTextNode(String(c)));});})(Array.prototype.slice.call(arguments,2));
+  return el;
+}
+function store(k,v){try{if(v===undefined){var r=localStorage.getItem(k);return r?JSON.parse(r):null;} localStorage.setItem(k,JSON.stringify(v));}catch(e){return null;}}
+
+var S={tab:'play',caseId:1,tally:store('ld.tally')||{},revealed:{},playOut:{},bk:{out:null,loo:null,score:store('ld.score')||{forced:0,unprompted:0,cross:0}},
+  tier:store('ld.tier')||'quick',proj:false,bench:store('ld.bench'),running:false};
+var sample=null, ctl=null, REC=null;
+function byId(id){return CASES.filter(function(c){return c.id===id})[0]}
+function persistTally(){store('ld.tally',S.tally)}
+
+/* ---- connection ---- */
+function setConn(state,text){var e=$('conn');e.dataset.state=state;e.textContent=text;}
+function banner(msg){var b=$('banner');b.hidden=!msg;b.textContent=msg||'';}
+function errCopy(e){
+  var c=e&&e.code;
+  if(c==='not_granted') return 'Live calls were not allowed for this page. Saved results still work.';
+  if(c==='rate_limited') return 'Too many calls from this connection. Wait a minute, then try again.';
+  if(c==='session_expired') return 'Sign in again to run live calls.';
+  if(c==='sampling_disabled') return 'Claude calls are not available for this account.';
+  if(c==='busy') return 'The model is busy. Wait a moment, then try again.';
+  if(c==='disabled') return 'Live calls are switched off for now. Saved results still work.';
+  if(c==='network') return 'Could not reach the server. Check your connection and try again.';
+  if(c==='cancelled') return '';
+  return 'A live call failed. Try that step again.';
+}
+async function connect(){
+  sample=null;
+  try{
+    var r=await fetch('/api/sample',{cache:'no-store'}); var j=await r.json();
+    if(r.ok&&j&&j.ok) sample={live:true};
+  }catch(e){sample=null;}
+  try{var rr=await fetch('recorded-run.json',{cache:'no-store'}); if(rr.ok){var rj=await rr.json(); REC=(rj&&rj.run)||null; if(REC&&!REC.results) REC=null;}}catch(e){REC=null;}
+  if(sample){setConn('on','Claude ready');}
+  else if(REC){
+    setConn('off','recorded run');
+    $('askPolicies').textContent='Show recorded answers';
+    banner('Live calls are off on this page. You are looking at a recorded run ('+REC.tier+' tier, '+new Date(REC.at).toLocaleDateString()+'). Tap "Show recorded answers" on any case.');
+    if(!S.bench){S.bench=REC; $('benchStatus').textContent='Showing the recorded run.'; renderBench(REC);}
+  } else {setConn('off','offline: saved runs only'); banner('Live calls are not available right now. A saved benchmark still shows below.');}
+  $('bkOffline').hidden=!!sample;
+  refreshButtons();
+}
+function refreshButtons(){
+  var live=!!sample && !S.running;
+  ['askPolicies','bkRun','bkLoo','benchRun'].forEach(function(id){$(id).disabled=!live});
+  if(!sample&&REC) $('askPolicies').disabled=false;
+  $('benchStop').disabled=!S.running;
+}
+
+/* ---- model calls ---- */
+async function ask(policy,srcs,signal){
+  var r;
+  try{
+    r=await fetch('/api/sample',{method:'POST',headers:{'content-type':'application/json'},signal:signal,
+      body:JSON.stringify({policy:policy.id,sources:{gauge:String(srcs.gauge),field:String(srcs.field),camera:String(srcs.camera)},tier:S.tier})});
+  }catch(e){
+    if(e&&e.name==='AbortError') throw {code:'cancelled'};
+    throw {code:'network'};
+  }
+  var j=null; try{j=await r.json();}catch(e){}
+  if(!r.ok||!j||j.error){ throw {code:(j&&j.code)||(r.status===429?'rate_limited':'error')}; }
+  return normalize(policy.id,j.result);
+}
+async function safeAsk(policy,srcs,signal){
+  try{return await ask(policy,srcs,signal);}
+  catch(e){
+    var m=errCopy(e); if(m) banner(m);
+    if(e&&e.code==='invalid_json') return {invalid:true,label:null,decision:null,cited:[],reason:'Unreadable reply',error:'invalid_json'};
+    return {invalid:true,label:null,decision:null,cited:[],reason:'No reply ('+(e&&e.code||'error')+')',error:e&&e.code||'error'};
+  }
+}
+async function pool(tasks,limit,onDone){
+  var i=0,done=0;
+  async function worker(){while(i<tasks.length){var my=i++; await tasks[my](); done++; if(onDone) onDone(done,tasks.length);}}
+  var ws=[]; for(var w=0;w<limit;w++) ws.push(worker()); await Promise.all(ws);
+}
+
+/* ---- rendering helpers ---- */
+function resultCard(policy,out,c){
+  var j=c?judge(c,out):null;
+  var head=h('header',null,
+    h('div',{class:'pname'},h('span',{class:'dot '+policy.id}),policy.name),
+    j?h('span',{class:j.ok?'ok':'no',text:j.ok?'✓ matches gold':'✗ '+j.why}):null);
+  var body=[];
+  if(!out){body.push(h('div',{class:'hint',text:'Waiting…'}));}
+  else{
+    body.push(h('div',null,h('span',{class:'label',text:out.label?LABEL_TEXT[out.label]:'NO ANSWER'}),out.decision?h('span',{class:'mono',text:'  '+out.decision.replace('_',' ')}):null));
+    if(out.cited&&out.cited.length) body.push(h('div',{class:'cited'},out.cited.map(function(s){return h('span',{text:LABELS[s]})})));
+    if(out.implications) body.push(h('div',{class:'mono',text:SOURCES.map(function(s){return s+': '+(out.implications[s]||'?')}).join('   ')}));
+    if(out.reason) body.push(h('div',{class:'reason',text:out.reason}));
+    if(out.request) body.push(h('div',{class:'reason'},h('b',{text:'Requests: '}),out.request));
+  }
+  return h.apply(null,['article',{class:'res'},head].concat(body));
+}
+function renderChips(){
+  var box=$('caseChips'); box.replaceChildren();
+  CASES.forEach(function(c){
+    var b=h('button',{class:'chip','aria-pressed':String(c.id===S.caseId),onclick:function(){S.caseId=c.id;renderPlay();}},String(c.id),LIVE_PICKS.indexOf(c.id)>=0?h('i',{class:'live'}):null);
+    box.append(b);
+  });
+}
+function renderPlay(){
+  renderChips();
+  var c=byId(S.caseId);
+  var box=$('sources'); box.replaceChildren();
+  SOURCES.forEach(function(s){box.append(h('div',{class:'card'},h('div',{class:'k',text:LABELS[s]}),h('div',{class:'v',text:c[s]})));});
+  var t=S.tally[c.id]||{ANSWER:0,CONFLICT:0,NEED_MORE:0};
+  var hands=$('hands'); hands.replaceChildren();
+  ['ANSWER','CONFLICT','NEED_MORE'].forEach(function(l){
+    var sub={ANSWER:'I am confident.',CONFLICT:'The sources disagree.',NEED_MORE:'I cannot decide yet.'}[l];
+    var el=h('div',{class:'hand','data-gold':String(!!S.revealed[c.id]&&c.gold.label===l)},
+      h('button',{class:'btn',style:'text-align:left;border:0;background:none;padding:0','aria-label':'Add a hand for '+LABEL_TEXT[l],onclick:function(){var x=S.tally[c.id]||(S.tally[c.id]={ANSWER:0,CONFLICT:0,NEED_MORE:0});x[l]++;persistTally();renderPlay();}},
+        h('div',{class:'name',text:LABEL_TEXT[l]}),h('div',{class:'n',text:String(t[l])}),h('div',{class:'sub',text:sub+' Tap to add a hand.'})),
+      h('button',{class:'minus','aria-label':'Remove a hand for '+LABEL_TEXT[l],onclick:function(){var x=S.tally[c.id];if(x&&x[l]>0){x[l]--;persistTally();renderPlay();}}},'− one'));
+    hands.append(el);
+  });
+  var gb=$('goldBox');
+  if(S.revealed[c.id]){gb.hidden=false;gb.className='gold';gb.replaceChildren(h('b',{text:'Answer: '+LABEL_TEXT[c.gold.label]+(c.gold.decision?' ('+c.gold.decision.replace('_',' ')+')':'')}),h('div',{text:c.why}));}
+  else{gb.hidden=true;}
+  var pr=$('playResults'); pr.replaceChildren();
+  var o=S.playOut[c.id];
+  if(o) POLICIES.forEach(function(p){pr.append(resultCard(p,o[p.id],c));});
+}
+
+/* ---- Play actions ---- */
+$('reveal').onclick=function(){S.revealed[S.caseId]=true;renderPlay();};
+$('resetTally').onclick=function(){delete S.tally[S.caseId];persistTally();renderPlay();};
+$('askPolicies').onclick=async function(){
+  if(!sample){
+    var rc=REC&&REC.results&&REC.results[S.caseId]; if(!rc) return;
+    S.playOut[S.caseId]={}; POLICIES.forEach(function(p){S.playOut[S.caseId][p.id]=rc[p.id];}); renderPlay(); return;
+  } var c=byId(S.caseId), id=c.id; banner('');
+  S.running=true;refreshButtons(); ctl=new AbortController();
+  S.playOut[id]={}; renderPlay();
+  var srcs={gauge:c.gauge,field:c.field,camera:c.camera};
+  await pool(POLICIES.map(function(p){return async function(){var out=await safeAsk(p,srcs,ctl.signal);S.playOut[id][p.id]=out;if(S.caseId===id)renderPlay();};}),2);
+  S.running=false;refreshButtons();
+};
+
+/* ---- Break it ---- */
+function fillBreak(id){var c=byId(id);SOURCES.forEach(function(s){$('bk-'+s).value=c[s]});}
+function bkSources(){var o={};SOURCES.forEach(function(s){o[s]=($('bk-'+s).value||'').trim()||'No report'});return o;}
+function renderScore(){
+  var box=$('score'); box.replaceChildren();
+  POLICIES.forEach(function(p){
+    box.append(h('button',{onclick:function(){S.bk.score[p.id]++;store('ld.score',S.bk.score);renderScore();},'aria-label':'Fooled '+p.name},
+      h('span',{class:'dot '+p.id}),h('span',{text:p.name}),h('b',{text:String(S.bk.score[p.id])})));
+  });
+  box.append(h('button',{class:'btn',onclick:function(){S.bk.score={forced:0,unprompted:0,cross:0};store('ld.score',S.bk.score);renderScore();}},'Reset'));
+}
+function renderBk(){
+  var r=$('bkResults'); r.replaceChildren();
+  if(S.bk.out) POLICIES.forEach(function(p){r.append(resultCard(p,S.bk.out[p.id],null));});
+}
+$('bkRun').onclick=async function(){
+  if(!sample) return; banner(''); S.running=true;refreshButtons(); ctl=new AbortController();
+  S.bk.out={}; renderBk(); var srcs=bkSources();
+  await pool(POLICIES.map(function(p){return async function(){S.bk.out[p.id]=await safeAsk(p,srcs,ctl.signal);renderBk();};}),2);
+  S.running=false;refreshButtons();
+};
+$('bkLoo').onclick=async function(){
+  if(!sample) return; banner(''); S.running=true;refreshButtons(); ctl=new AbortController();
+  var cross=POLICIES[2], srcs=bkSources(), runs={}, full=null;
+  $('looBox').hidden=false; S.bk.loo={full:null,runs:{}}; renderLoo();
+  var tasks=[async function(){full=await safeAsk(cross,srcs,ctl.signal);S.bk.loo.full=full;renderLoo();}];
+  SOURCES.forEach(function(s){tasks.push(async function(){var m={};SOURCES.forEach(function(k){m[k]=k===s?'[unavailable]':srcs[k]});runs[s]=await safeAsk(cross,m,ctl.signal);S.bk.loo.runs[s]=runs[s];renderLoo();});});
+  await pool(tasks,2);
+  S.running=false;refreshButtons();
+};
+function renderLoo(){
+  var t=$('looTable'); t.replaceChildren(); var L=S.bk.loo; if(!L) return;
+  var piv=looPivots(L.full,L.runs);
+  var cell=function(o){return o?h('td',null,h('span',{class:'label',text:o.label?LABEL_TEXT[o.label]:'NO ANSWER'}),o.decision?h('span',{class:'mono',text:'  '+o.decision.replace('_',' ')}):null):h('td',{class:'hint',text:'…'});};
+  t.append(h('thead',null,h('tr',null,h('th',{text:'Source removed'}),h('th',{text:'CrossCheck says'}),h('th',{text:'Effect'}))));
+  var tb=h('tbody');
+  tb.append(h('tr',null,h('td',{text:'none (full evidence)'}),cell(L.full),h('td',{class:'hint',text:'baseline'})));
+  SOURCES.forEach(function(s){
+    var o=L.runs[s]; tb.append(h('tr',{class:piv[s]?'pivot':''},h('td',{text:LABELS[s]}),cell(o),h('td',{text:!o?'':piv[s]?'Changes the answer: this source matters here':'No change'})));
+  });
+  t.append(tb);
+  var n=SOURCES.filter(function(s){return piv[s]});
+  $('looNote').textContent=(L.full&&SOURCES.every(function(s){return L.runs[s]}))?(n.length?'The answer depends on: '+n.map(function(s){return LABELS[s]}).join(', ')+'.':'No single source changes the answer.'):'';
+}
+
+/* ---- Benchmark ---- */
+function drawChart(sum,n){
+  var W=900,rowH=64,left=340,right=70,top=34,H=top+rowH*METRICS.length+10;
+  var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox','0 0 '+W+' '+H); svg.setAttribute('role','img');
+  svg.setAttribute('aria-label','Grouped bars: six measures, three policies, percent of cases');
+  svg.style.width='100%'; svg.style.height='auto'; svg.style.maxWidth='980px';
+  var ns='http://www.w3.org/2000/svg', x0=left, x1=W-right, sx=function(v){return x0+(x1-x0)*v};
+  function el(t,a,txt){var e=document.createElementNS(ns,t);Object.keys(a).forEach(function(k){e.setAttribute(k,a[k])});if(txt!=null)e.textContent=txt;return e;}
+  [0,.5,1].forEach(function(v){
+    svg.append(el('line',{x1:sx(v),x2:sx(v),y1:top-6,y2:H-8,stroke:'var(--line)','stroke-width':1}));
+    svg.append(el('text',{x:sx(v),y:top-12,'text-anchor':'middle','font-size':11,class:'m'},Math.round(v*100)+'%'));
+  });
+  METRICS.forEach(function(m,i){
+    var y=top+i*rowH;
+    svg.append(el('text',{x:left-12,y:y+18,'text-anchor':'end','font-size':13},m.label));
+    svg.append(el('text',{x:left-12,y:y+35,'text-anchor':'end','font-size':11,class:'m'},(m.dir==='up'?'higher is better':'lower is better')+' · n = '+(sum.cross[m.key].n)));
+    POLICIES.forEach(function(p,j){
+      var d=sum[p.id][m.key], by=y+4+j*14, v=d.v;
+      var cls={forced:'--p-forced',unprompted:'--p-unprompted',cross:'--p-cross'}[p.id];
+      if(v==null){svg.append(el('text',{x:x0+4,y:by+9,'font-size':11,class:'m'},'n/a'));return;}
+      var r=el('rect',{x:x0,y:by,width:Math.max(2,(x1-x0)*v),height:10,rx:3,fill:'var('+cls+')'});
+      r.append(el('title',{},p.name+': '+Math.round(v*100)+'% of '+d.n+' cases'));
+      svg.append(r);
+      svg.append(el('text',{x:x0+(x1-x0)*v+6,y:by+9,'font-size':11},Math.round(v*100)+'%'));
+    });
+  });
+  return svg;
+}
+function renderBench(b){
+  var out=$('benchOut'); out.replaceChildren(); if(!b) return;
+  var sum=summarize(b.results,CASES);
+  out.append(h('div',{class:'legend',style:'margin-bottom:8px'},POLICIES.map(function(p){return h('span',null,h('i',{class:'dot '+p.id}),p.name)})));
+  out.append(drawChart(sum));
+  var bad=POLICIES.map(function(p){return sum[p.id].unusable?p.name+': '+sum[p.id].unusable+' unusable replies':null}).filter(Boolean);
+  out.append(h('p',{class:'hint',text:'Run '+new Date(b.at).toLocaleString()+' · model tier '+b.tier+(b.note?' · '+b.note:'')+' · '+CASES.length+' cases (4 agreeing, 4 conflicting, 4 with missing evidence).'+(bad.length?' Unusable replies count as wrong: '+bad.join('; ')+'.':'')}));
+  var rows=h('tbody');
+  CASES.forEach(function(c){
+    var tr=h('tr',null,h('td',{text:String(c.id)}),h('td',{text:STATE_OF[c.gold.label]}),h('td',{text:LABEL_TEXT[c.gold.label]}));
+    POLICIES.forEach(function(p){var o=b.results[c.id]&&b.results[c.id][p.id]; var j=judge(c,o&&!o.error?o:null);
+      tr.append(h('td',null,h('span',{class:j.ok?'ok':'no',text:j.ok?'✓ ':'✗ '}),o&&o.label?LABEL_TEXT[o.label]:'none'));});
+    rows.append(tr);
+  });
+  var tbl=h('table',null,h('thead',null,h('tr',null,h('th',{text:'Case'}),h('th',{text:'Evidence'}),h('th',{text:'Gold'}),POLICIES.map(function(p){return h('th',{text:p.name})}))),rows);
+  out.append(h('details',null,h('summary',{text:'Per-case table'}),h('div',{class:'scroll'},tbl)));
+}
+$('benchRun').onclick=async function(){
+  if(!sample) return; banner(''); S.running=true;refreshButtons(); ctl=new AbortController();
+  var results={}; var total=CASES.length*POLICIES.length; $('benchBar').style.width='0';
+  $('benchStatus').textContent='Running '+total+' calls…';
+  var tasks=[]; CASES.forEach(function(c){POLICIES.forEach(function(p){tasks.push(async function(){
+    if(ctl.signal.aborted) return;
+    var out=await safeAsk(p,{gauge:c.gauge,field:c.field,camera:c.camera},ctl.signal);
+    (results[c.id]||(results[c.id]={}))[p.id]=out;});});});
+  await pool(tasks,2,function(d,t){$('benchBar').style.width=Math.round(100*d/t)+'%';$('benchStatus').textContent='Running… '+d+' of '+t;});
+  var aborted=ctl.signal.aborted;
+  S.running=false;refreshButtons();
+  if(aborted){$('benchStatus').textContent='Stopped. The previous saved run is unchanged.';return;}
+  var b={at:Date.now(),tier:S.tier,results:results}; S.bench=b; store('ld.bench',b);
+  $('benchStatus').textContent='Done. Saved in this browser for offline replay.'; renderBench(b);
+};
+$('benchStop').onclick=function(){if(ctl)ctl.abort();};
+$('benchReplay').onclick=function(){
+  var b=store('ld.bench')||REC; if(!b){$('benchStatus').textContent='No saved run in this browser yet.';return;}
+  S.bench=b; $('benchStatus').textContent='Showing the saved run.'; renderBench(b);
+};
+$('benchExport').onclick=async function(){
+  if(!S.bench){$('benchStatus').textContent='Nothing to save yet. Run the benchmark first.';return;}
+  try{
+    var blob=new Blob([JSON.stringify({cases:CASES,run:S.bench,summary:summarize(S.bench.results,CASES)},null,2)],{type:'application/json'});
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='leak-desk-results.json';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(a.href)},2000);
+  }catch(e){$('benchStatus').textContent='Could not save the file here.';}
+};
+
+/* ---- tabs, tier, projector ---- */
+function showTab(t){
+  S.tab=t;
+  [['play','p-play'],['break','p-break'],['bench','p-bench']].forEach(function(x){
+    $('t-'+x[0]).setAttribute('aria-selected',String(x[0]===t)); $(x[1]).hidden=x[0]!==t;
+  });
+}
+$('t-play').onclick=function(){showTab('play')};
+$('t-break').onclick=function(){showTab('break')};
+$('t-bench').onclick=function(){showTab('bench')};
+var tier=$('tier'); tier.value=S.tier; tier.onchange=function(){S.tier=tier.value;store('ld.tier',S.tier);};
+$('proj').onclick=function(){S.proj=!S.proj;document.body.classList.toggle('proj',S.proj);$('proj').setAttribute('aria-pressed',String(S.proj));};
+
+/* ---- init ---- */
+CASES.forEach(function(c){$('bkCase').append(h('option',{value:String(c.id),text:'Case '+c.id+' ('+STATE_OF[c.gold.label]+')'}))});
+$('bkCase').onchange=function(){fillBreak(Number($('bkCase').value))};
+fillBreak(3); renderPlay(); renderScore(); renderBk();
+if(S.bench) renderBench(S.bench);
+refreshButtons();
+connect();
+})();
+</script>
+
+</body>
+</html>
