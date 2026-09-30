@@ -1,0 +1,511 @@
+{
+ "run": {
+  "at": 1790808162373,
+  "tier": "quick",
+  "note": "recorded with Claude Haiku: one fresh, independent call per case and policy",
+  "results": {
+   "1": {
+    "forced": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field",
+      "camera"
+     ],
+     "reason": "Pressure drop of 18% in 10 minutes combined with operator-reported rotten-egg odor and vultures at valve 3 indicate a probable gas leak requiring immediate crew response.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "DISPATCH"
+    },
+    "unprompted": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field",
+      "camera"
+     ],
+     "reason": "Significant pressure drop (18% in 10 minutes), reported rotten-egg odor characteristic of odorised natural gas, and vultures circling above valve 3 all converge on a likely leak requiring immediate crew response.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "DISPATCH"
+    },
+    "cross": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field",
+      "camera"
+     ],
+     "reason": "Pressure drop of 18% in 10 minutes, rotten-egg odor at valve 3, and vultures circling all indicate an active gas leak requiring immediate crew dispatch.",
+     "request": null,
+     "implications": {
+      "gauge": "LEAK",
+      "field": "LEAK",
+      "camera": "LEAK"
+     },
+     "label": "ANSWER",
+     "decision": "DISPATCH"
+    }
+   },
+   "2": {
+    "forced": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field",
+      "camera"
+     ],
+     "reason": "Steady pressure, no chemical odor detected in field check, and clear sky with no circling vultures all indicate normal operations with no leak.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "NO_DISPATCH"
+    },
+    "unprompted": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field",
+      "camera"
+     ],
+     "reason": "All three sources indicate normal operation: steady pressure at 62 bar, valves tight with no smell detected, and clear sky with no vultures present.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "NO_DISPATCH"
+    },
+    "cross": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field",
+      "camera"
+     ],
+     "reason": "Steady gauge pressure, field verification of tight valves and no smell, and absence of vultures all confirm normal operation with no leak.",
+     "request": null,
+     "implications": {
+      "gauge": "NO_LEAK",
+      "field": "NO_LEAK",
+      "camera": "NO_LEAK"
+     },
+     "label": "ANSWER",
+     "decision": "NO_DISPATCH"
+    }
+   },
+   "3": {
+    "forced": {
+     "invalid": false,
+     "cited": [
+      "field",
+      "camera"
+     ],
+     "reason": "Strong rotten-egg smell at valve 3 indicates gas leak; vultures circling confirms location requiring crew inspection.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "DISPATCH"
+    },
+    "unprompted": {
+     "invalid": false,
+     "cited": [
+      "field",
+      "camera"
+     ],
+     "reason": "Strong rotten-egg smell detected at valve 3 by field report and confirmed by vultures circling at the same location indicate an active gas leak requiring crew response.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "DISPATCH"
+    },
+    "cross": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field"
+     ],
+     "reason": "Pressure gauge indicates no leak but field report of strong rotten-egg smell indicates a leak.",
+     "request": null,
+     "implications": {
+      "gauge": "NO_LEAK",
+      "field": "LEAK",
+      "camera": "UNKNOWN"
+     },
+     "label": "CONFLICT",
+     "decision": null
+    }
+   },
+   "4": {
+    "forced": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field",
+      "camera"
+     ],
+     "reason": "Pressure drop of 18% in 10 minutes is a significant anomaly requiring investigation despite field report indicating no smell or sound.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "DISPATCH"
+    },
+    "unprompted": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field",
+      "camera"
+     ],
+     "reason": "Gauge shows significant 18% pressure drop suggesting potential issue, but field team confirms no smell or sound and camera shows no birds, indicating no active leak detected.",
+     "request": null,
+     "implications": null,
+     "label": "CONFLICT",
+     "decision": null
+    },
+    "cross": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field"
+     ],
+     "reason": "Pressure gauge indicates LEAK (18% drop in 10 minutes) but field report indicates NO_LEAK (no smell, no sound).",
+     "request": null,
+     "implications": {
+      "gauge": "LEAK",
+      "field": "NO_LEAK",
+      "camera": "NO_LEAK"
+     },
+     "label": "CONFLICT",
+     "decision": null
+    }
+   },
+   "5": {
+    "forced": {
+     "invalid": false,
+     "cited": [
+      "camera"
+     ],
+     "reason": "Vultures are a weak indicator on their own and lack corroboration from pressure gauge data or field report.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "NO_DISPATCH"
+    },
+    "unprompted": {
+     "invalid": false,
+     "cited": [
+      "camera"
+     ],
+     "reason": "Vultures circling is a weak indicator that could indicate either a leak or ordinary carrion; gauge offline provides no data and no field report to confirm.",
+     "request": null,
+     "implications": null,
+     "label": "NEED_MORE",
+     "decision": null
+    },
+    "cross": {
+     "invalid": false,
+     "cited": [],
+     "reason": "All three sources are inconclusive: the gauge is offline, no field report is available, and vultures are a weak leak indicator on their own.",
+     "request": "Field report from on-site personnel or a functioning pressure gauge reading",
+     "implications": {
+      "gauge": "UNKNOWN",
+      "field": "UNKNOWN",
+      "camera": "UNKNOWN"
+     },
+     "label": "NEED_MORE",
+     "decision": null
+    }
+   },
+   "6": {
+    "forced": {
+     "invalid": false,
+     "cited": [
+      "gauge"
+     ],
+     "reason": "Pressure gauge shows normal 3% drift within acceptable range; no field report and obscured camera provide no evidence of a leak requiring crew dispatch.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "NO_DISPATCH"
+    },
+    "unprompted": {
+     "invalid": false,
+     "cited": [
+      "gauge"
+     ],
+     "reason": "Pressure gauge shows normal 3% drift within expected range, indicating the system is operating normally; no evidence of a problem warrants dispatch.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "NO_DISPATCH"
+    },
+    "cross": {
+     "invalid": false,
+     "cited": [],
+     "reason": "Only the pressure gauge implies something definite; field report is missing and camera view is obscured.",
+     "request": "Field report",
+     "implications": {
+      "gauge": "NO_LEAK",
+      "field": "UNKNOWN",
+      "camera": "UNKNOWN"
+     },
+     "label": "NEED_MORE",
+     "decision": null
+    }
+   },
+   "7": {
+    "forced": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field",
+      "camera"
+     ],
+     "reason": "Pressure drop of 25% in 5 minutes combined with loud hissing, gas smell, and vultures at flange 2 indicate an active gas leak requiring immediate crew dispatch.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "DISPATCH"
+    },
+    "unprompted": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field",
+      "camera"
+     ],
+     "reason": "Pressure drop of 25% in 5 minutes, loud hissing, gas smell at flange 2, and vultures gathering confirm an active leak requiring immediate crew dispatch.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "DISPATCH"
+    },
+    "cross": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field",
+      "camera"
+     ],
+     "reason": "All three sources indicate a leak at flange 2: rapid pressure loss, audible hissing and gas smell, and vulture gathering.",
+     "request": null,
+     "implications": {
+      "gauge": "LEAK",
+      "field": "LEAK",
+      "camera": "LEAK"
+     },
+     "label": "ANSWER",
+     "decision": "DISPATCH"
+    }
+   },
+   "8": {
+    "forced": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field",
+      "camera"
+     ],
+     "reason": "Pressure is steady at 61 bar, field patrol reports tight valves with no odour, and camera shows empty sky with no vulture activity—all indicators of normal operation.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "NO_DISPATCH"
+    },
+    "unprompted": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field",
+      "camera"
+     ],
+     "reason": "All indicators show normal operation with steady pressure, no odour detected, and no circling vultures.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "NO_DISPATCH"
+    },
+    "cross": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field"
+     ],
+     "reason": "Steady pressure and tight valves with no odour indicate no leak.",
+     "request": null,
+     "implications": {
+      "gauge": "NO_LEAK",
+      "field": "NO_LEAK",
+      "camera": "UNKNOWN"
+     },
+     "label": "ANSWER",
+     "decision": "NO_DISPATCH"
+    }
+   },
+   "9": {
+    "forced": {
+     "invalid": false,
+     "cited": [
+      "field",
+      "gauge"
+     ],
+     "reason": "Technician's report of loud hissing at valve 6 indicates a potential valve malfunction or leak requiring immediate investigation, supported by steady pressure gauge confirming system is still functioning.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "DISPATCH"
+    },
+    "unprompted": {
+     "invalid": false,
+     "cited": [
+      "field",
+      "gauge",
+      "camera"
+     ],
+     "reason": "Loud hissing at valve 6 is a direct indicator of a potential gas leak or valve malfunction requiring immediate crew dispatch.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "DISPATCH"
+    },
+    "cross": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field"
+     ],
+     "reason": "Pressure gauge indicates steady conditions (no leak) while field technician reports loud hissing at valve 6 (leak indicator) — these sources contradict.",
+     "request": null,
+     "implications": {
+      "gauge": "NO_LEAK",
+      "field": "LEAK",
+      "camera": "UNKNOWN"
+     },
+     "label": "CONFLICT",
+     "decision": null
+    }
+   },
+   "10": {
+    "forced": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "camera"
+     ],
+     "reason": "A 30% pressure drop in 5 minutes is a critical anomaly that warrants immediate investigation, supported by vultures circling above the pump house.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "DISPATCH"
+    },
+    "unprompted": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field",
+      "camera"
+     ],
+     "reason": "The 30% pressure drop in 5 minutes indicates a serious problem warranting investigation despite negative field inspection results.",
+     "request": null,
+     "implications": null,
+     "label": "CONFLICT",
+     "decision": null
+    },
+    "cross": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field"
+     ],
+     "reason": "Pressure gauge indicates significant leak while field inspection found no surface signs, requiring resolution of conflicting signals before dispatch.",
+     "request": "Verify pressure gauge calibration and conduct subsurface inspection for underground leak not visible at surface",
+     "implications": {
+      "gauge": "LEAK",
+      "field": "NO_LEAK",
+      "camera": "UNKNOWN"
+     },
+     "label": "CONFLICT",
+     "decision": null
+    }
+   },
+   "11": {
+    "forced": {
+     "invalid": false,
+     "cited": [
+      "camera",
+      "field"
+     ],
+     "reason": "No birds visible on camera feed and no field report filed indicate no active leak signs, while frozen gauge provides no data to contradict this assessment.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "NO_DISPATCH"
+    },
+    "unprompted": {
+     "invalid": false,
+     "cited": [
+      "gauge",
+      "field",
+      "camera"
+     ],
+     "reason": "The gauge is frozen and tells nothing, field report is missing, and absence of birds is insufficient to confirm safe operation.",
+     "request": null,
+     "implications": null,
+     "label": "NEED_MORE",
+     "decision": null
+    },
+    "cross": {
+     "invalid": false,
+     "cited": [],
+     "reason": "Only the camera feed is definite; pressure gauge is frozen and field report is missing, so more observation is needed.",
+     "request": "field report",
+     "implications": {
+      "gauge": "UNKNOWN",
+      "field": "UNKNOWN",
+      "camera": "NO_LEAK"
+     },
+     "label": "NEED_MORE",
+     "decision": null
+    }
+   },
+   "12": {
+    "forced": {
+     "invalid": false,
+     "cited": [
+      "field"
+     ],
+     "reason": "Field report indicates only an uncertain, vague observation from earlier; gauge is offline and camera unavailable, providing insufficient evidence to warrant dispatch.",
+     "request": null,
+     "implications": null,
+     "label": "ANSWER",
+     "decision": "NO_DISPATCH"
+    },
+    "unprompted": {
+     "invalid": false,
+     "cited": [
+      "field"
+     ],
+     "reason": "Only weak, uncertain evidence from field report; gauge offline and camera unavailable provide no objective confirmation.",
+     "request": null,
+     "implications": null,
+     "label": "NEED_MORE",
+     "decision": null
+    },
+    "cross": {
+     "invalid": false,
+     "cited": [],
+     "reason": "All three sources are offline, unavailable, or too vague to provide definite evidence of a leak.",
+     "request": "pressure gauge reading",
+     "implications": {
+      "gauge": "UNKNOWN",
+      "field": "UNKNOWN",
+      "camera": "UNKNOWN"
+     },
+     "label": "NEED_MORE",
+     "decision": null
+    }
+   }
+  }
+ }
+}
